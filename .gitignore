@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+artifacts/
+*.parquet
+*.arrow
+*.pt
+*.ckpt
+.pytest_cache/
