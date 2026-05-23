@@ -144,11 +144,16 @@ def precompute_encodings(ds: "ProofStateDataset", *, struct: bool = True,
 
     For a real LTM-Tiny run this is the single biggest CPU-side speedup: it
     converts per-batch ``encode_rlic`` work into per-batch concatenation.
+
+    Also detects cached encodings missing the ``he_share_*`` fields (added for
+    the collapsed-grade M5+ ablation) and regenerates them in place.
     """
+    def _needs_regen(d) -> bool:
+        return d is None or "he_share_src" not in d
     for r in ds.records:
-        if afford and r.enc_afford is None:
+        if afford and _needs_regen(r.enc_afford):
             r.enc_afford = encode_rlic_local(r.K_afford)
-        if struct and r.enc_struct is None:
+        if struct and _needs_regen(r.enc_struct):
             r.enc_struct = encode_rlic_local(r.K_struct)
 
 

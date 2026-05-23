@@ -49,6 +49,14 @@ class CellBatch:
     family_idx: torch.Tensor # [B] long, tactic-family target id
     slice_idx: torch.Tensor  # [B] long, structural-slice id
 
+    # Pairs of grade ≤ 1 cells (nodes) that share a grade ≥ 2 cell (hyperedge),
+    # indexed by the role pair on that hyperedge. Used by the "collapsed-grade
+    # M5 with rich transport" ablation (M3+). Default to empty when not built.
+    he_share_src: torch.Tensor = None       # [E_he] node u
+    he_share_dst: torch.Tensor = None       # [E_he] node v
+    he_share_role_u: torch.Tensor = None    # [E_he] role of u on shared HE
+    he_share_role_v: torch.Tensor = None    # [E_he] role of v on shared HE
+
     def to(self, device) -> "CellBatch":
         return CellBatch(
             **{k: (v.to(device) if isinstance(v, torch.Tensor) else v)
@@ -100,11 +108,35 @@ def encode_rlic_local(K: RLIC) -> dict:
     side_role_self = torch.tensor(side_role_self_l, dtype=torch.long)
     side_role_other = torch.tensor(side_role_other_l, dtype=torch.long)
 
+    # Pairs of grade ≤ 1 cells sharing a grade ≥ 2 coface (hyperedge),
+    # together with their role pair on that hyperedge. Used by the
+    # collapsed-grade M5 + rich transport ablation (M3+).
+    he_share_src_l, he_share_dst_l, he_share_ru_l, he_share_rv_l = [], [], [], []
+    for c in K.cells:
+        if c.grade < 2:
+            continue
+        # collect node-grade boundary entries
+        node_entries = [(fc, role.as_int())
+                        for fc, role in c.boundary
+                        if K.cells[fc].grade <= 1]
+        for i, (u, ru) in enumerate(node_entries):
+            for j, (v, rv) in enumerate(node_entries):
+                if i == j:
+                    continue
+                he_share_src_l.append(v); he_share_dst_l.append(u)
+                he_share_ru_l.append(ru); he_share_rv_l.append(rv)
+    he_share_src = torch.tensor(he_share_src_l, dtype=torch.long)
+    he_share_dst = torch.tensor(he_share_dst_l, dtype=torch.long)
+    he_share_role_u = torch.tensor(he_share_ru_l, dtype=torch.long)
+    he_share_role_v = torch.tensor(he_share_rv_l, dtype=torch.long)
+
     return {
         "label": label, "type_tag": type_tag, "grade": grade,
         "down_src": down_src, "down_dst": down_dst, "down_role": down_role,
         "side_src": side_src, "side_dst": side_dst,
         "side_role_self": side_role_self, "side_role_other": side_role_other,
+        "he_share_src": he_share_src, "he_share_dst": he_share_dst,
+        "he_share_role_u": he_share_role_u, "he_share_role_v": he_share_role_v,
         "n_cells": n,
     }
 
@@ -124,6 +156,8 @@ def collate(
     labels, types, grades = [], [], []
     downs_src, downs_dst, downs_role = [], [], []
     sides_src, sides_dst, sides_role_self, sides_role_other = [], [], [], []
+    he_share_src_parts, he_share_dst_parts = [], []
+    he_share_ru_parts, he_share_rv_parts = [], []
     batch_idx, family_idx, slice_idx = [], [], []
 
     offset = 0
@@ -138,6 +172,13 @@ def collate(
         sides_dst.append(enc["side_dst"] + offset)
         sides_role_self.append(enc["side_role_self"])
         sides_role_other.append(enc["side_role_other"])
+        # New: collapsed-grade side-via-hyperedge pairs (default empty for
+        # records encoded before this field was added)
+        if "he_share_src" in enc:
+            he_share_src_parts.append(enc["he_share_src"] + offset)
+            he_share_dst_parts.append(enc["he_share_dst"] + offset)
+            he_share_ru_parts.append(enc["he_share_role_u"])
+            he_share_rv_parts.append(enc["he_share_role_v"])
         batch_idx.append(torch.full((n,), b, dtype=torch.long))
         family_idx.append(fam); slice_idx.append(sl)
         offset += n
@@ -157,6 +198,8 @@ def collate(
         up_src=up_src, up_dst=up_dst, up_role=up_role,
         side_src=cat(sides_src), side_dst=cat(sides_dst),
         side_role_self=cat(sides_role_self), side_role_other=cat(sides_role_other),
+        he_share_src=cat(he_share_src_parts), he_share_dst=cat(he_share_dst_parts),
+        he_share_role_u=cat(he_share_ru_parts), he_share_role_v=cat(he_share_rv_parts),
         batch_idx=cat(batch_idx),
         family_idx=torch.tensor(family_idx, dtype=torch.long),
         slice_idx=torch.tensor(slice_idx, dtype=torch.long),

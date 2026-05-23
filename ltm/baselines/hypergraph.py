@@ -35,6 +35,10 @@ class HyperConfig:
     n_heads: int = 4
     use_roles: bool = True       # M3: True; M2: False
     use_hyperedge_state: bool = True  # M3: True; M2: False
+    # Collapsed-grade-M5 / M3+ ablation: add node↔node attention via shared
+    # hyperedges, indexed by the role pair on that hyperedge. Off by default
+    # so legacy M2/M3 configs are unchanged.
+    use_side: bool = False
 
 
 class _NodeHyperedgeAttn(nn.Module):
@@ -84,11 +88,18 @@ class _NodeHyperedgeAttn(nn.Module):
 
 
 class HypergraphModel(nn.Module):
-    """Weak (M2) or strong role-aware (M3) hypergraph encoder.
+    """Weak (M2), strong role-aware (M3), or collapsed-grade-rich-transport
+    (M3+, the ablation isolating grading) hypergraph encoder.
 
     Cells with grade ≥ 2 are treated as *hyperedges*; cells with grade ≤ 1 are
     *nodes*. The CellBatch boundary edges already give us node↔hyperedge
     incidence (boundary edges from a node face to its higher-grade coface).
+
+    The optional ``cfg.use_side`` flag adds a third attention direction in
+    which each node attends to other nodes sharing one of its hyperedges, with
+    the message conditioned on the role pair on that shared hyperedge. This
+    isolates the cellular *grading* itself (versus role-conditioned transport
+    over typed hyperedges) — see §7.8 of the paper.
     """
 
     def __init__(self, cfg: HyperConfig):
@@ -103,8 +114,9 @@ class HypergraphModel(nn.Module):
             [_NodeHyperedgeAttn(cfg.d, cfg.n_heads, cfg.use_roles, cfg.n_role_ids)
              for _ in range(cfg.L)]
         )
+        upd_in = (3 * cfg.d) if cfg.use_side else (2 * cfg.d)
         self.upd_node = nn.ModuleList(
-            [nn.Sequential(nn.LayerNorm(2 * cfg.d), nn.Linear(2 * cfg.d, cfg.d),
+            [nn.Sequential(nn.LayerNorm(upd_in), nn.Linear(upd_in, cfg.d),
                            nn.GELU(), nn.Linear(cfg.d, cfg.d))
              for _ in range(cfg.L)]
         )
@@ -112,6 +124,14 @@ class HypergraphModel(nn.Module):
             self.upd_edge = nn.ModuleList(
                 [nn.Sequential(nn.LayerNorm(2 * cfg.d), nn.Linear(2 * cfg.d, cfg.d),
                                nn.GELU(), nn.Linear(cfg.d, cfg.d))
+                 for _ in range(cfg.L)]
+            )
+        if cfg.use_side:
+            # Side direction: node ↔ node via shared hyperedge. Composite role
+            # is (role_u, role_v) -> u*n_role + v, clamped into the embedding.
+            self.node_to_node = nn.ModuleList(
+                [_NodeHyperedgeAttn(cfg.d, cfg.n_heads, True,
+                                    min(cfg.n_role_ids * cfg.n_role_ids, 64 * 64))
                  for _ in range(cfg.L)]
             )
 
@@ -134,6 +154,14 @@ class HypergraphModel(nn.Module):
         n2e_dst = batch.down_dst[ndown_mask]
         n2e_role = batch.down_role[ndown_mask] if self.cfg.use_roles else torch.zeros_like(n2e_src)
 
+        if self.cfg.use_side:
+            # Compose role pair (u, v) -> u*64 + v ∈ [0, 64*64).
+            r_u = batch.he_share_role_u.clamp(max=63)
+            r_v = batch.he_share_role_v.clamp(max=63)
+            n2n_role = r_u * 64 + r_v
+            n2n_src = batch.he_share_src
+            n2n_dst = batch.he_share_dst
+
         for li in range(self.cfg.L):
             # nodes attend over... themselves? in the weak case, only over
             # hyperedges. We do edge→node and node→edge each layer.
@@ -143,7 +171,12 @@ class HypergraphModel(nn.Module):
                 # only update edges
                 h = torch.where(is_edge.unsqueeze(-1), h + h_e_new, h)
             a_n = self.edge_to_node[li](h, h, n2e_dst, n2e_src, n2e_role)
-            h_n_new = self.upd_node[li](torch.cat([h, a_n], dim=-1))
+            if self.cfg.use_side:
+                a_s = self.node_to_node[li](h, h, n2n_src, n2n_dst, n2n_role)
+                cat_n = torch.cat([h, a_n, a_s], dim=-1)
+            else:
+                cat_n = torch.cat([h, a_n], dim=-1)
+            h_n_new = self.upd_node[li](cat_n)
             h = torch.where(is_node.unsqueeze(-1), h + h_n_new, h)
 
         pooled = class_canonical_pool(
@@ -171,4 +204,17 @@ def make_strong_role_aware(cfg: HyperConfig | None = None) -> HypergraphModel:
     cfg = cfg or HyperConfig()
     cfg.use_roles = True
     cfg.use_hyperedge_state = True
+    cfg.use_side = False
+    return HypergraphModel(cfg)
+
+
+def make_collapsed_grade_rich(cfg: HyperConfig | None = None) -> HypergraphModel:
+    """M3+ (collapsed-grade M5 with rich transport): all higher cells are
+    typed hyperedges (no graded levels) but three role-conditioned attention
+    directions are preserved — node→hyperedge, hyperedge→node, and node↔node
+    via shared hyperedge. Used to isolate the cellular grading itself."""
+    cfg = cfg or HyperConfig()
+    cfg.use_roles = True
+    cfg.use_hyperedge_state = True
+    cfg.use_side = True
     return HypergraphModel(cfg)

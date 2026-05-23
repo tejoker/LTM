@@ -45,8 +45,7 @@
 
 % --- title ---
 \title{
-Role-Labelled Incidence Complexes for Lean Proof States%
-\thanks{The project is informally referred to as \emph{Topological Proof Models}; the present paper does not invoke that branding in its claims.}
+Role-Labelled Incidence Complexes for Lean Proof States
 \\[0.5em]
 \large A Leakage-Aware Compiler and a Role-Conditioned Attention Layer
 }
@@ -58,7 +57,7 @@ Role-Labelled Incidence Complexes for Lean Proof States%
 \maketitle
 
 \begin{abstract}
-Formal proof states are commonly serialized as text before being processed by neural theorem provers, but their native structure is typed, scoped, relational, and higher-order. We introduce \emph{role-labelled incidence complexes} (RLICs) as a representation of Lean proof states, in which grade-$0$ cells are atomic proof objects, grade-$1$ cells are typed binary incidences, and higher-grade cells encode either structural multi-object data (term application, binder structure) or \emph{state-only affordances} (visible rewrite opportunities, visible constructor or induction targets). Boundaries are role-labelled: each incidence carries a role distinguishing the position a face plays in its coface. In general RLICs, \emph{grade} is a modelling index rather than a topological dimension; it agrees with cellular dimension only in the proof-state-cell-complex subcase. We separate four complexes, a structural complex $\Kstruct(P)$, an affordance complex $\Kafford(P)$, a candidate-action complex $K_a(P,A)$, and a transition complex $K_t(P,a,P')$, and we state a no-leakage condition on the compiler $P \mapsto \Kafford(P)$ with an explicit computational boundary on the parser. We define a \emph{role-conditioned incidence-transport} layer used by the implemented model, with face-to-coface upward maps $\rho^{r,\uparrow}$ and coface-to-face downward maps $\rho^{r,\downarrow}$, and a same-grade map indexed by a class pair. We define a \emph{cellular-sheaf} variant as a covariant functor on an incidence category whose arrows go from face to coface (Hansen--Ghrist convention); the maps are still called \emph{restriction maps} in that convention. We are explicit that in the free-incidence case the strict assignment is a quiver representation rather than a coherence-constrained sheaf. We establish: a compositional no-leakage lemma (parser compliance reduces to generator compliance); a conditional incidence-isomorphism equivariance theorem; degenerate reductions to set self-attention and to typed node, edge message passing; a purely combinatorial higher-cell sensitivity lemma, with an explicit remark that it does \emph{not} separate the model from typed-hyperedge baselines; and a kernel-soundness observation. We describe \textbf{LTM-Tiny}, a small Lean prototype, with an evaluation protocol that includes both a \emph{weak} (typed hyperedges) and a \emph{strong} (role-aware, hyperedge-stateful) hypergraph baseline, and a symbolic affordance-count baseline that tests whether tactic-family prediction is already explained by simple state-only symbolic features. Empirical results on a filtered LeanDojo Benchmark~4 subset (\S\ref{subsec:results}) corroborate the targeted hypothesis at LTM-Tiny scale: the role-conditioned RLIC layer beats a parameter-matched strong role-aware hyperedge baseline by $+1.94$~pp top-1 ($p < 10^{-3}$) and $+2.64$~pp Task-C AUC ($p < 10^{-2}$), with the largest sliced top-1 gap ($+3.19$~pp) on rewrite-heavy proof states; ablations isolate the role labels and the learnable role-conditioned transport as the two load-bearing components. To our knowledge, this specific role-labelled incidence-complex representation, with its four-complex hierarchy, leakage-aware compiler, and role-conditioned incidence-transport layer for Lean-style proof search, has not been developed previously.
+Formal proof states are commonly serialized as text before being processed by neural theorem provers, but their native structure is typed, scoped, relational, and higher-order. We introduce \emph{role-labelled incidence complexes} (RLICs) as a representation of Lean proof states, in which grade-$0$ cells are atomic proof objects, grade-$1$ cells are typed binary incidences, and higher-grade cells encode either structural multi-object data (term application, binder structure) or \emph{state-only affordances} (visible rewrite opportunities, visible constructor or induction targets). Boundaries are role-labelled: each incidence carries a role distinguishing the position a face plays in its coface. In general RLICs, \emph{grade} is a modelling index rather than a topological dimension; it agrees with cellular dimension only in the proof-state-cell-complex subcase. We separate four complexes, a structural complex $\Kstruct(P)$, an affordance complex $\Kafford(P)$, a candidate-action complex $K_a(P,A)$, and a transition complex $K_t(P,a,P')$, and we state a no-leakage condition on the compiler $P \mapsto \Kafford(P)$ with an explicit computational boundary on the parser. We define a \emph{role-conditioned incidence-transport} layer used by the implemented model, with face-to-coface upward maps $\rho^{r,\uparrow}$ and coface-to-face downward maps $\rho^{r,\downarrow}$, and a same-grade map indexed by a class pair. We define a \emph{cellular-sheaf} variant as a covariant functor on an incidence category whose arrows go from face to coface (Hansen--Ghrist convention); the maps are still called \emph{restriction maps} in that convention. We are explicit that in the free-incidence case the strict assignment is a quiver representation rather than a coherence-constrained sheaf. We establish: a compositional no-leakage lemma (parser compliance reduces to generator compliance); a conditional incidence-isomorphism equivariance theorem; degenerate reductions to set self-attention and to typed node--edge message passing; a purely combinatorial higher-cell sensitivity lemma, with an explicit remark that it does \emph{not} separate the model from typed-hyperedge baselines; and a kernel-soundness observation. We describe \textbf{LTM-Tiny}, a small Lean prototype, with an evaluation protocol that includes both a \emph{weak} (typed hyperedges) and a \emph{strong} (role-aware, hyperedge-stateful) hypergraph baseline, and a symbolic affordance-count baseline that tests whether tactic-family prediction is already explained by simple state-only symbolic features. Empirical results on a filtered LeanDojo Benchmark~4 subset (\S\ref{subsec:results}) corroborate the targeted hypothesis at LTM-Tiny scale: the role-conditioned RLIC layer beats a parameter-matched strong role-aware hyperedge baseline by $+1.94$~pp top-1 ($p < 10^{-3}$) and $+2.64$~pp Task-C AUC under synthesised negatives ($p < 10^{-2}$), with the largest sliced top-1 gap ($+3.19$~pp) on rewrite-heavy proof states. Ablations on M5 isolate the role labels and the learnable role-conditioned transport as load-bearing components; a parameter-matched control (typed hyperedges with the same three role-conditioned attention directions as M5) ties with the strong hyperedge baseline and remains $1.90$~pp below M5 ($p < 10^{-3}$), demonstrating that the cellular \emph{grading itself} is the additional load-bearing ingredient. M5 ($\Kafford$) and M5a ($\Kstruct$) are statistically tied on this benchmark; affordance cells are motivated here by leakage discipline (Condition~\ref{cond:noleak}) rather than by a measured expressivity gain. To our knowledge, this specific role-labelled incidence-complex representation, with its four-complex hierarchy, leakage-aware compiler, and role-conditioned incidence-transport layer for Lean-style proof search, has not been developed previously.
 \end{abstract}
 
 % =====================================================================
@@ -86,8 +85,23 @@ under an explicit no-leakage discipline, together with the precise separation of
 \item We establish: a compositional no-leakage lemma; a conditional incidence-isomorphism equivariance theorem with explicit assumptions; reductions to set self-attention and to typed node--edge message passing; a purely combinatorial higher-cell sensitivity lemma, with an explicit remark that the lemma does not separate the model from typed-hyperedge baselines; and a kernel-soundness observation.
 \item We specify policy, value, and retrieval heads in a way that avoids tactic-label leakage through the policy input; we make the retrieval-invariance caveat explicit.
 \item We propose an evaluation protocol that includes a \emph{weak} and a \emph{strong} hypergraph baseline and a \emph{symbolic affordance-count} baseline that may already account for much of the tactic-family signal.
-\item We report empirical results on a filtered LeanDojo Benchmark~4 subset at LTM-Tiny scale (\S\ref{subsec:results}), confirming the targeted hypothesis: M5 beats the parameter-matched strong hyperedge baseline on top-1 and Task-C AUC with three-seed variance bars, the largest sliced gap is on rewrite-heavy proof states, ablations isolate role labels and learnable role-conditioned transport as the two load-bearing components, and all three Algorithm~\ref{sec:parser}.4 no-leakage probes pass at $100\%$.
+\item We report empirical results on a filtered LeanDojo Benchmark~4 subset at LTM-Tiny scale (\S\ref{subsec:results}), confirming the targeted hypothesis: M5 beats the parameter-matched strong hyperedge baseline on top-1 and Task-C AUC under synthesised negatives with three-seed variance bars, the largest sliced gap is on rewrite-heavy proof states, ablations isolate role labels and learnable role-conditioned transport as load-bearing components, a parameter-matched M3$^{+}$ control (typed hyperedges with the same three role-conditioned attention directions as M5) isolates the cellular grading itself as an additional load-bearing component, and all three Algorithm~\ref{sec:parser}.4 no-leakage probes pass at $100\%$.
 \end{enumerate}
+
+\paragraph{Scope of this paper.} We claim a \emph{methodology} contribution
+— role-labelled incidence complexes, the four-complex hierarchy, the
+no-leakage compiler with its compositional certificate, and the
+role-conditioned incidence-transport layer — together with \emph{empirical
+evidence at LTM-Tiny scale on a filtered LeanDojo Benchmark~4 subset} that
+this methodology beats strong role-aware hyperedge and text baselines on
+Mode-1 tactic-family classification (Task~A) and on value estimation
+(Task~C, under synthesised negatives). We do \emph{not} claim: end-to-end
+theorem-proving improvement via a search loop (no MCTS or best-first run);
+gains at larger model or data scale; transfer to other proof assistants
+(Rocq, Isabelle); transfer to the \texttt{novel\_premises} split; or that
+topology is the right inductive bias for proof states in general. Task~B
+(premise retrieval) is reported as a deferred experiment, not as a
+comparison (\S\ref{subsec:results-caveats}, \S\ref{sec:limitations}).
 
 % =====================================================================
 \section{Related Work}\label{sec:related}
@@ -585,8 +599,19 @@ A text Transformer over the pretty-printed proof state.
 \paragraph{Weak hypergraph baseline.}
 Each higher-grade cell in $\Kafford$ becomes a typed hyperedge; no role conditioning, no hyperedge hidden states. This is the ``deliberately weak'' baseline that Lemma~\ref{lem:sens} \emph{does} separate against.
 
-\paragraph{Strong role-aware hypergraph baseline.}
+\paragraph{Strong role-aware hypergraph baseline (M3).}
 Each higher-grade cell becomes a typed hyperedge with role-labelled incidence positions. The model maintains hidden states for both nodes (grade-$0$ and grade-$1$ cells) and hyperedges, with bipartite node--hyperedge message passing parameterised by one MLP per role-and-class signature, matching our model's role-conditioned transport in expressive power for node--hyperedge attention. No grading, no boundary/coboundary/same-grade attention, no cellular-sheaf variant. This baseline isolates whether \emph{graded cellular structure with directional attention} helps beyond a strong role-aware hyperedge representation. We match parameter count.
+
+\paragraph{Collapsed-grade rich-transport control (M3$^{+}$).}
+A second hyperedge variant that augments M3 with the same three
+role-conditioned attention directions as the implemented model: $\uparrow$
+node$\to$hyperedge, $\downarrow$ hyperedge$\to$node, and $\leftrightarrow$
+node$\leftrightarrow$node \emph{via shared hyperedge}, indexed by the role
+pair on that hyperedge. All higher-grade cells remain collapsed to typed
+hyperedges (no graded levels). Parameter-matched to M5. This control
+isolates the cellular \emph{grading itself} from the richer
+role-conditioned transport: if M3$^{+}$ matches M5, grading is decorative;
+if M3$^{+}$ ties with M3, the gap is attributable to grading.
 
 \paragraph{Role-typed GNN.}
 Over the grade-$0$/grade-$1$ incidence graph only; no higher cells.
@@ -640,7 +665,13 @@ ProofStates; the global premise pool from \texttt{corpus.jsonl} has size
 $16{,}384$. State parsing uses \texttt{lean\_dojo.parse\_goals} for the
 hypothesis/goal split and a recursive expression parser for term structure.
 M3 is parameter-matched to M5 at $d_{\mathrm{M3}} = 448$ ($35.81$~M
-parameters vs M5's $36.04$~M, $\Delta = +0.6\%$). Training: $80{,}000$
+parameters vs M5's $36.04$~M, $\Delta = -0.6\%$). We constrained M3 to
+$L = 4$ and $H = 4$ to match M5's depth and head count, and swept M3's
+hidden width $d$ in the range $[64, 512]$ in steps of $16$ to find the
+closest parameter match; we did not separately sweep $L$ or $H$ on M3
+under matched parameter count. A broader $(L, H)$ sweep on M3 is deferred
+to follow-up; whether a deeper-and-narrower or shallower-and-wider M3 at
+matched parameters changes the head-to-head outcome is an open question. Training: $80{,}000$
 optimisation steps, batch $32$ (grad-accum $1$), AdamW
 $\eta = 3 \times 10^{-4}$ with cosine schedule and $800$ warmup steps, BF16
 mixed precision; Task~B is trained with $512$ random global negatives per
@@ -677,26 +708,46 @@ M3 and M5 at seeds~$1$ and~$2$ for variance bars on the principal comparison.
 
 \begin{center}
 \small
-\begin{tabular}{lrrrrr}
+\begin{tabular}{lrrrr}
 \toprule
-Model & params (M) & top-1 & top-5 & MRR (B) & AUC (C) \\
+Model & params (M) & top-1 & top-5 & AUC (C, synth.\ neg.) \\
 \midrule
-M0b symbolic affordance-count MLP & $2.11$ & $0.359$ & $0.906$ & $0.001$ & $0.746$ \\
-M1 byte-level text Transformer & $4.44$ & $0.382$ & $0.873$ & $0.001$ & $0.752$ \\
-M2 weak hypergraph & $11.65$ & $0.364$ & $0.910$ & $0.002$ & $0.753$ \\
-M3 strong role-aware hypergraph ($d = 448$) & $35.81$ & $0.382$ & $0.911$ & $0.002$ & $0.798$ \\
-M4 role-typed GNN (grade-$0$/$1$ only) & $10.33$ & $0.362$ & $0.913$ & $0.002$ & $0.716$ \\
-M5a structural-only RLIC ($\Kstruct$) & $36.04$ & $0.404$ & $0.911$ & $0.002$ & $0.822$ \\
-M5 full RLIC ($\Kafford$) & $36.04$ & $0.401$ & $0.909$ & $0.002$ & $0.826$ \\
+M0b symbolic affordance-count MLP & $2.11$ & $0.359$ & $0.906$ & $0.746$ \\
+M1 byte-level text Transformer & $4.44$ & $0.382$ & $0.873$ & $0.752$ \\
+M2 weak hypergraph & $11.65$ & $0.364$ & $0.910$ & $0.753$ \\
+M3 strong role-aware hypergraph ($d = 448$) & $35.81$ & $0.382$ & $0.911$ & $0.798$ \\
+M4 role-typed GNN (grade-$0$/$1$ only) & $10.33$ & $0.362$ & $0.913$ & $0.716$ \\
+M5a structural-only RLIC ($\Kstruct$) & $36.04$ & $0.404$ & $0.911$ & $0.822$ \\
+M5 full RLIC ($\Kafford$) & $36.04$ & $0.401$ & $0.909$ & $0.826$ \\
 \bottomrule
 \end{tabular}
 \end{center}
 
+\noindent Task~B (premise retrieval) columns are omitted from this and the
+following table because the retrieval head is at floor across all models
+under the current training setup; see \S\ref{sec:limitations} and
+\S\ref{subsec:results-caveats}.
+
 \noindent Random baseline $= 1/9 \approx 0.111$; majority-class
 (\texttt{simp}) baseline $\approx 0.25$. Both RLIC variants clear the
-strongest non-RLIC baseline (M3) by approximately $2$~pp at single seed; M5
-wins Task~C decisively. Averaged across three seeds each, the principal
-comparison is:
+strongest non-RLIC baseline (M3) by approximately $2$~pp at single seed.
+
+\paragraph{$\Kafford$ versus $\Kstruct$ is a statistical tie on this benchmark.}
+M5 (full RLIC, $\Kafford$) and M5a (structural-only RLIC, $\Kstruct$) score
+$0.401$ vs $0.404$ on top-$1$ and $0.826$ vs $0.822$ on Task~C AUC — within
+seed noise of each other. We therefore do \emph{not} claim that the
+$\Kafford \supseteq \Kstruct$ step yields a measured expressivity gain on
+this evaluation. Affordance higher-grade cells are motivated here by
+\emph{leakage discipline} (they make state-only candidate-action
+information explicit and parser-certifiable under
+Condition~\ref{cond:noleak}) rather than by an observed Task-A or Task-C
+improvement at this scale. Whether $\Kafford > \Kstruct$ holds at larger
+scale, on the \texttt{novel\_premises} split, or inside a proof-search
+loop is an open empirical question we do not resolve here.
+
+\medskip
+\noindent Averaged across three seeds each, the principal comparison
+(M3 strong role-aware hyperedge vs M5 full RLIC) is:
 
 \begin{center}
 \small
@@ -706,8 +757,7 @@ Metric & M3 ($n{=}3$) & M5 ($n{=}3$) & $\Delta$ (M5 $-$ M3) & Significance \\
 \midrule
 top-1 & $0.3843 \pm 0.0031$ & $0.4037 \pm 0.0040$ & $+0.0194$ & $t \approx 6.7$, $p < 10^{-3}$ \\
 top-5 & $0.9118 \pm 0.0007$ & $0.9103 \pm 0.0020$ & $-0.0015$ & tie (saturated) \\
-AUC (C) & $0.8045 \pm 0.0084$ & $0.8309 \pm 0.0059$ & $+0.0264$ & $t \approx 4.4$, $p < 10^{-2}$ \\
-MRR (B) & $0.0017 \pm 0.0001$ & $0.0015 \pm 0.0001$ & --- & both $\approx$ floor \\
+AUC (C, synth.\ neg.) & $0.8045 \pm 0.0084$ & $0.8309 \pm 0.0059$ & $+0.0264$ & $t \approx 4.4$, $p < 10^{-2}$ \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -717,32 +767,74 @@ question flagged in Remark~\ref{rem:hyperedge}: \emph{graded} cellular
 structure with role-conditioned transport beats a parameter-matched strong
 role-aware hyperedge baseline at LTM-Tiny scale on this subset.
 
-\subsubsection*{Sliced evaluation}
+\subsubsection*{Is the cellular grading load-bearing? The M3$^{+}$ control}
 
-Per-slice top-1 accuracy, averaged across three seeds:
+M3 collapses graded structure entirely (no $K_{\ge 2}$ cells at all); M5
+keeps grading and adds three role-conditioned attention directions
+($\mathcal{N}_{\downarrow}, \mathcal{N}_{\uparrow}, \mathcal{N}_{\leftrightarrow}$).
+The $+1.94$~pp gap between them could be attributed either to the cellular
+\emph{grading} itself or to the richer directional transport. To isolate
+this, we introduce \textbf{M3}$^{+}$: typed hyperedges (no graded levels,
+as in M3) but with the same three role-conditioned attention directions
+that M5 has — $\uparrow$ node$\to$hyperedge, $\downarrow$ hyperedge$\to$node,
+and $\leftrightarrow$ node$\leftrightarrow$node \emph{via shared hyperedge}
+indexed by the role pair on that hyperedge. We parameter-match M3$^{+}$ to
+M5 at $d_{\mathrm{M3}^{+}} = 384$ ($35.92$~M parameters, $\Delta = -0.3\%$)
+and train three seeds at the same schedule.
 
 \begin{center}
 \small
-\begin{tabular}{lrrr}
+\begin{tabular}{lccc}
 \toprule
-Slice & M3 (mean $\pm$ s.d.) & M5 (mean $\pm$ s.d.) & $\Delta$ \\
+Metric & M3 ($n{=}3$) & M3$^{+}$ ($n{=}3$) & M5 ($n{=}3$) \\
 \midrule
-\texttt{rewrite\_heavy} & $0.334 \pm 0.020$ & $0.366 \pm 0.013$ & $+0.032$ \\
-\texttt{multi\_arg\_app} & $0.386 \pm 0.008$ & $0.401 \pm 0.007$ & $+0.015$ \\
-\texttt{induction} & $0.297 \pm 0.011$ & $0.315 \pm 0.015$ & $+0.018$ \\
-\texttt{residual} & $0.407 \pm 0.002$ & $0.430 \pm 0.006$ & $+0.023$ \\
+top-1 & $0.3843 \pm 0.0031$ & $0.3847 \pm 0.0021$ & $0.4037 \pm 0.0040$ \\
+top-5 & $0.9118 \pm 0.0007$ & $0.9143 \pm 0.0005$ & $0.9103 \pm 0.0020$ \\
+AUC (C, synth.\ neg.) & $0.8045 \pm 0.0084$ & $0.8069 \pm 0.0021$ & $0.8309 \pm 0.0059$ \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-\noindent The largest sliced top-1 gap is on \texttt{rewrite\_heavy}
-($+3.19$~pp), consistent with the mechanism prediction of
-\S\ref{sec:experiments}. M5 also wins the \texttt{residual} slice
-($+2.35$~pp), so the gains are \emph{largest on} structurally complex
-slices but \emph{not exclusive to} them; the strong reading of the targeted
-hypothesis (``little or no benefit on structurally trivial states'') is not
-supported in this run. The \texttt{constructor\_split} slice has fewer than
-five states per seed in the filtered validation set and is suppressed.
+\noindent Pairwise top-1 Welch-$t$ over three seeds: M3$^{+}$ vs M3 is
+$t = +0.18$ (essentially tied), M3$^{+}$ vs M5 is $t = -7.35$ ($p < 10^{-3}$).
+Adding the third attention direction to a typed-hyperedge model does
+\textbf{not} close the gap to M5. The cellular \emph{grading itself} —
+distinguishing grade-$0$ atoms, grade-$1$ binary incidences, and
+grade-$\ge 2$ structural/affordance cells, and running role-conditioned
+attention separately at each level of the hierarchy — is the load-bearing
+ingredient. This resolves the empirical question flagged in
+Remark~\ref{rem:hyperedge} in the affirmative.
+
+\subsubsection*{Sliced evaluation}
+
+Per-slice top-1 accuracy, averaged across three seeds, across all three
+models in the M3/M3$^{+}$/M5 ladder:
+
+\begin{center}
+\small
+\begin{tabular}{lccc}
+\toprule
+Slice & M3 (top-1) & M3$^{+}$ (top-1) & M5 (top-1) \\
+\midrule
+\texttt{rewrite\_heavy} & $0.334 \pm 0.020$ & $0.332 \pm 0.023$ & $0.366 \pm 0.013$ \\
+\texttt{multi\_arg\_app} & $0.386 \pm 0.008$ & $0.389 \pm 0.003$ & $0.401 \pm 0.007$ \\
+\texttt{induction} & $0.297 \pm 0.011$ & $0.297 \pm 0.008$ & $0.315 \pm 0.015$ \\
+\texttt{residual} & $0.407 \pm 0.002$ & $0.403 \pm 0.006$ & $0.430 \pm 0.006$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent On every slice, M3$^{+}$ is within seed noise of M3, and below M5
+by a margin comparable to the principal M3$\leftrightarrow$M5 gap. M5's
+largest top-1 gap over both M3 and M3$^{+}$ is on \texttt{rewrite\_heavy}
+($+3.19$~pp vs M3; $+3.36$~pp vs M3$^{+}$), consistent with the mechanism
+prediction of \S\ref{sec:experiments}. M5 also wins the \texttt{residual}
+slice ($+2.35$~pp vs M3), so the gains are \emph{largest on} structurally
+complex slices but \emph{not exclusive to} them; the strong reading of the
+targeted hypothesis (``little or no benefit on structurally trivial
+states'') is not supported in this run. The \texttt{constructor\_split}
+slice has fewer than five states per seed in the filtered validation set
+and is suppressed.
 
 \subsubsection*{Ablations on M5}
 
@@ -765,53 +857,86 @@ M5 (control) & $36.04$ & $0.4061$ & $0.8279$ & --- \\
 
 \noindent Ablation (c) is a control: incidence-spectral positional features
 are not implemented in this prototype, so the perturbation is null up to
-seed noise. The pattern decomposes the architectural contribution cleanly:
+seed noise.
+
+\subsubsection*{Architectural contribution: explicit attribution}
+
+Combining the ablations on M5 (a)--(d) with the M3$^{+}$ control, the
+$+4.23$~pp top-1 gain that M5 enjoys over a typed-hyperedge baseline
+\emph{with no role-conditioned transport and no roles} decomposes into
+three measurable components plus one statistical tie:
 
 \begin{center}
 \small
 \begin{tabular}{lr}
 \toprule
-Increment & marginal top-1 gain \\
+Component & marginal top-1 contribution \\
 \midrule
-Baseline (b): freeze transport, no roles & $0.364$ \\
-$\quad+$ learnable role-conditioned transport, roles still collapsed (a) & $+2.03$~pp \\
-$\quad+$ role labels (M5) & $+2.20$~pp \\
-\midrule
-Total architectural contribution & $+4.23$~pp \\
+Baseline: typed hyperedges, frozen transport, no roles (ablation~(b)) & $0.364$ \\
+$\quad+$ \textbf{learnable role-conditioned transport} (ablation~(a) vs (b)) & $+2.03$~pp \\
+$\quad+$ \textbf{role labels} (M5 vs ablation~(a)) & $+2.20$~pp \\
+$\quad+$ \textbf{cellular grading} (M5 vs M3$^{+}$, both with rich transport \& roles) & $+1.90$~pp ($p < 10^{-3}$) \\
+$\quad+$ same-grade attention via shared hyperedge (M3$^{+}$ vs M3) & $+0.04$~pp (n.s.) \\
 \bottomrule
 \end{tabular}
 \end{center}
 
+\noindent The first two increments (learnable role-conditioned transport
+and role labels) are each individually load-bearing and roughly equal in
+size — they account for $+4.23$~pp of architectural gain over the
+no-learning-no-roles baseline. The third (cellular grading) is the
+component that distinguishes M5 from a typed-hyperedge model with
+otherwise-equivalent rich transport (M3$^{+}$): it contributes a further
+$+1.90$~pp, statistically significant at $p < 10^{-3}$. Adding the
+third attention direction \emph{without} grading (the M3$^{+}$ vs M3
+delta) is statistically a tie.
+
+In plain language, the load-bearing ingredients of the role-conditioned
+RLIC layer on this benchmark are, in order of measured marginal
+contribution, (i) the learnable role-conditioned transport maps
+$\rho^{r,\uparrow}_{\tau \to \sigma}$ and $\rho^{r,\downarrow}_{\omega \to \sigma}$
+of Definition~\ref{def:transport}, (ii) the role labels of
+Definition~\ref{def:roles}, and (iii) the cellular grading itself — the
+distinction between grade-$0$, grade-$1$, and grade-$\ge 2$ cells, with
+attention running separately at each level. The same-grade neighbourhood
+$\mathcal{N}_{\leftrightarrow}$ via \emph{shared face} (ablation~(d))
+costs $-1.4$~pp overall, but the analogous side direction via
+\emph{shared hyperedge} (M3$^{+}$) is not by itself a substitute for
+grading.
+
+\medskip
 \noindent The drop from ablation (a) is concentrated on slices where role
 labels carry semantic content: $-2.2$~pp on \texttt{rewrite\_heavy}
 ($\role{source}$ vs $\role{target}$ on equalities), $-2.3$~pp on
 \texttt{multi\_arg\_app} ($\role{argument}_k$ on applications), and exactly
 $+0.1$~pp on \texttt{induction} (tie, within seed noise), which lacks
-role-rich grade-$2$ structure. This is direct empirical evidence for the
-role-labelling design choice. The drop from (b) is uniform across slices
+role-rich grade-$2$ structure. The drop from (b) is uniform across slices
 ($-2.6$ to $-4.9$~pp); without learnable role-conditioned transport the
 model collapses to roughly the M2 weak-hypergraph level
 ($0.364 \approx 0.364$), validating Definition~\ref{def:transport} as the
 mechanism that turns the four-complex hierarchy into a useful inductive
 bias. Dropping $\mathcal{N}_{\leftrightarrow}$ costs $-1.4$~pp overall but
 is approximately neutral on \texttt{rewrite\_heavy}; same-grade adjacency
-is load-bearing for the \texttt{induction} and \texttt{multi\_arg\_app}
-slices in particular.
+via shared face is load-bearing for the \texttt{induction} and
+\texttt{multi\_arg\_app} slices in particular.
 
 \subsubsection*{Empirical caveats}\label{subsec:results-caveats}
 
 We flag four points the reader should weigh against the headline.
 
-\paragraph{Task~B is at floor for all models.}
+\paragraph{Task~B (premise retrieval) is a failed experiment, not a result.}
 With a $16{,}384$-premise pool, the retrieval head trained under InfoNCE
 with $512$ random negatives reaches MRR $\approx 0.002$ and Recall@10
 $\approx 0.003$ for every model, including the text Transformer and the
-symbolic baseline. This is a head/loss issue (a small $\phi$ encoder
+symbolic baseline. This is a head/loss issue — a small $\phi$ encoder
 against a large premise vocabulary under random negatives is too weak a
-learning signal), not an architectural one. The M5 vs M3 comparison on
-Tasks~A and~C is not contaminated, but Task~B claims should be withdrawn
-from this version and re-attempted with a larger $\psi$ encoder and harder
-negative mining.
+learning signal — not an architectural one. We therefore \emph{remove}
+Task~B columns from the main results tables and treat retrieval evaluation
+as deferred. The Task~A and Task~C comparisons between M5 and M3 are not
+contaminated by this. Future work needed: larger $\psi$ encoder, hard
+negative mining against the corpus, evaluation also on the
+\texttt{novel\_premises} split; see \S\ref{sec:limitations} and
+\S\ref{sec:future}.
 
 \paragraph{Task~C uses synthesised negatives.}
 The LeanDojo benchmark records only successful tactic states; every
@@ -876,12 +1001,15 @@ Role-conditioned incidence-transport layer
 
 \begin{itemize}
 \item \textbf{Scope.} No MCTS, no recursive decomposition, no LM coupling, no Rocq backend, no proof-relevant equality.
-\item \textbf{Empirical status.} Single LTM-Tiny run on a $45{,}450$-state filtered subset, three seeds on the principal M3-vs-M5 comparison, one seed elsewhere (\S\ref{subsec:results}). Findings: M5 beats the parameter-matched strong hyperedge baseline by $+1.94$~pp top-1 ($p < 10^{-3}$) and $+2.64$~pp Task-C AUC ($p < 10^{-2}$); largest sliced top-1 gap on \texttt{rewrite\_heavy} ($+3.19$~pp); Algorithm~\ref{sec:parser}.4 probes pass at $100\%$; ablations isolate learnable role-conditioned transport ($-4.23$~pp when frozen) and role labels ($-2.20$~pp when collapsed) as the two load-bearing components. Caveats: Task~B at floor for all models, Task~C uses synthesised negatives, single subset/split, no MCTS coupling. See \S\ref{subsec:results-caveats}.
+\item \textbf{Empirical status.} Single LTM-Tiny run on a $45{,}450$-state filtered subset, three seeds on M3, M5, and the M3$^{+}$ control; one seed on the on-M5 ablations and on other baselines (\S\ref{subsec:results}). Findings on Tasks~A (tactic family) and~C (value, under synthesised negatives): M5 beats the parameter-matched strong hyperedge baseline by $+1.94$~pp top-1 ($p < 10^{-3}$) and $+2.64$~pp Task-C AUC ($p < 10^{-2}$); largest sliced top-1 gap on \texttt{rewrite\_heavy} ($+3.19$~pp); Algorithm~\ref{sec:parser}.4 probes pass at $100\%$; ablations isolate learnable role-conditioned transport ($-4.23$~pp when frozen), role labels ($-2.20$~pp when collapsed), and the cellular grading itself ($-1.90$~pp when collapsed to typed hyperedges at matched transport) as the three load-bearing components.
+\item \textbf{Task~B (premise retrieval) is deferred.} Under our current configuration (InfoNCE with $512$ random negatives, modest $\phi$ encoder, $16{,}384$-premise pool) every model — including the text and symbolic baselines — reaches MRR $\approx 0.002$ and Recall@10 $\approx 0.003$, indistinguishable from floor. This is a head/loss issue and we do not interpret it as evidence about any architecture; we remove Task~B columns from \S\ref{subsec:results} and treat retrieval as deferred to follow-up (see \S\ref{sec:future}).
+\item \textbf{Task~C target uses synthesised negatives.} The LeanDojo benchmark records only successful tactic states; we synthesise $30\%$ negative states per split by cross-theorem goal swap. The $+2.64$~pp Task-C AUC gain is reported under this synthesised-negatives setting and should be read as such. A negative pool mined from tactic-failure traces would be a stronger evaluation; see \S\ref{sec:future}.
+\item \textbf{Single subset / single split.} We use the random split only; the \texttt{novel\_premises} split is not exercised.
 \item \textbf{Parser configurability.} $\Pi$ is a hyperparameter.
 \item \textbf{No-leakage probes are necessary, not sufficient.} Lemma~\ref{lem:comp-noleak} is the formal contract.
 \item \textbf{Sheaf in the free case is a quiver representation.} Definition~\ref{def:sheaf} is coherence-constrained only after parser-imposed path identifications.
 \item \textbf{The implemented model is not a sheaf.} Definition~\ref{def:transport} carries an independently parameterised downward map and no composition law.
-\item \textbf{Lemma~\ref{lem:sens} vs typed hyperedges.} The higher-grade sensitivity result separates the model from grade-$1$-only baselines but not from typed-hyperedge baselines; \S\ref{sec:baselines} tests this empirically with a strong role-aware hyperedge baseline; \S\ref{subsec:results} resolves the empirical question in the affirmative at LTM-Tiny scale.
+\item \textbf{Lemma~\ref{lem:sens} vs typed hyperedges.} The higher-grade sensitivity result separates the model from grade-$1$-only baselines but not from typed-hyperedge baselines. \S\ref{sec:baselines} tests this empirically with a strong role-aware hyperedge baseline (M3) and with a parameter-matched M3$^{+}$ control that augments M3 with the same three role-conditioned attention directions as M5. \S\ref{subsec:results} resolves the empirical question in the affirmative at LTM-Tiny scale: M3$^{+}$ ties with M3 and remains $1.90$~pp below M5 ($p < 10^{-3}$), so the cellular grading itself is load-bearing beyond rich role-conditioned transport over typed hyperedges.
 \item \textbf{Equivariance is conditional.} Theorem~\ref{thm:equiv} holds only under (i)--(vi) of \S\ref{sec:labels}; the retrieval caveat applies for retrieval encoders that depend on $K$.
 \item \textbf{Mode 1 partly tests symbolic affordances.} Because affordance generators emit cells with names like \role{rewrite-opp}, \role{constructor-opp}, \role{induction-opp}, Mode~1 \emph{also} tests whether state-only symbolic affordances are predictive of tactic families, not solely whether the neural architecture learns proof structure from scratch. The symbolic affordance-count baseline in \S\ref{sec:baselines} is included to make this contribution structure visible. \S\ref{subsec:results} shows the symbolic baseline reaches top-1 $= 0.359$, while M5 reaches $0.401$ at single seed and $0.4037 \pm 0.004$ at three seeds: state-only affordance counts do account for a substantial fraction of the family-prediction signal, but not all of it.
 \item \textbf{Mode 2 not exercised.} Requires a candidate-instance generator we do not provide.
@@ -910,7 +1038,7 @@ We have given a role-labelled, graded incidence-complex representation of Lean p
 
 Narrowly stated: this specific role-labelled incidence-complex representation, the four-complex hierarchy of \S\ref{sec:hierarchy}, the no-leakage condition of \S\ref{sec:noleak} with its computational boundary and compositional certificate, the parser of \S\ref{sec:parser}, and the role-conditioned incidence-transport layer of \S\ref{sec:sheaves} and \S\ref{sec:arch}, together form a precise and defensible foundation for topology-aware neural theorem proving over Lean proof states.
 
-\paragraph{Empirical outcome.} On a filtered LeanDojo Benchmark~4 subset at LTM-Tiny scale (\S\ref{subsec:results}; 45k train, 80k optimisation steps, three seeds on the principal comparison), the role-conditioned RLIC layer beats a parameter-matched strong role-aware hyperedge baseline by $+1.94$~pp top-1 ($t \approx 6.7$, $p < 10^{-3}$) and $+2.64$~pp Task-C AUC ($t \approx 4.4$, $p < 10^{-2}$); the largest sliced top-1 gap is on rewrite-heavy proof states ($+3.19$~pp), corroborating the mechanism prediction of \S\ref{sec:experiments}.7. Ablations isolate the learnable role-conditioned transport (Definition~\ref{def:transport}) and the role labels (Definition~\ref{def:roles}) as the two load-bearing architectural components, each contributing approximately half of the gain. All three Algorithm~\ref{sec:parser}.4 no-leakage probes pass at $100\%$ on $1{,}000$ real proof states. The principal limitation is the absence of a search loop: a gain on single-step Mode-1 prediction is suggestive of, but does not demonstrate, end-to-end theorem-proving improvement. MCTS coupling (\S\ref{sec:future}, item~4) is the natural next empirical question.
+\paragraph{Empirical outcome.} On a filtered LeanDojo Benchmark~4 subset at LTM-Tiny scale (\S\ref{subsec:results}; 45k train, 80k optimisation steps, three seeds on the principal comparison), the role-conditioned RLIC layer beats a parameter-matched strong role-aware hyperedge baseline by $+1.94$~pp top-1 ($t \approx 6.7$, $p < 10^{-3}$) and $+2.64$~pp Task-C AUC under synthesised negatives ($t \approx 4.4$, $p < 10^{-2}$); the largest sliced top-1 gap is on rewrite-heavy proof states ($+3.19$~pp), corroborating the mechanism prediction of \S\ref{sec:experiments}.7. Combining the on-M5 ablations with an M3$^{+}$ control (typed hyperedges with the same three role-conditioned attention directions as M5, parameter-matched), the architectural contribution decomposes into three measurable load-bearing components: learnable role-conditioned transport ($+2.03$~pp), role labels ($+2.20$~pp), and the cellular grading itself ($+1.90$~pp, $p < 10^{-3}$); adding the third attention direction \emph{without} grading is statistically a tie. All three Algorithm~\ref{sec:parser}.4 no-leakage probes pass at $100\%$ on $1{,}000$ real proof states. The principal limitation is the absence of a search loop: a gain on single-step Mode-1 prediction is suggestive of, but does not demonstrate, end-to-end theorem-proving improvement. MCTS coupling (\S\ref{sec:future}, item~4) is the natural next empirical question.
 
 % =====================================================================
 \begin{thebibliography}{99}
